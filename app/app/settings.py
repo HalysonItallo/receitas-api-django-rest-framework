@@ -69,6 +69,8 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'app.wsgi.application'
 
+SHELL_PLUS = "ipython"
+
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
