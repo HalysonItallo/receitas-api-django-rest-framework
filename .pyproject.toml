@@ -19,7 +19,7 @@ target-version = ['py312']
 [tool.isort]
 profile = "black"
 line_length = 119
-known_first_party = ["asimov_backend", "config"]
+known_first_party = ["app", "settings"]
 skip = ["venv/"]
 skip_glob = ["**/migrations/*.py"]
 
