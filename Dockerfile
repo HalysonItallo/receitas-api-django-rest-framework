@@ -3,6 +3,7 @@ LABEL matainer="halyssonpimentell@gmail.com"
 
 # Evita delay na saída das menssagens no console
 ENV PYTHONNUNBUFFERED 1
+
 COPY ./requirements.txt /tmp/requirements.txt
 COPY ./requirements-dev.txt /tmp/requirements-dev.txt
 COPY ./app /app
