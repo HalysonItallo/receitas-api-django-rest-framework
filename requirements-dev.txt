@@ -1,5 +1,4 @@
 flake8==7.0.0
 Flake8-pyproject==1.2.3
-pytest-sugar==1.0.0
 django-extensions==3.2.3
 ipython==8.23.0
