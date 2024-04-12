@@ -20,4 +20,4 @@ jobs:
           pip install -r requirements.txt
       - name: Run Tests
         run: |
-          docker compose run --rm django python manage.py wait_for_db && python manage.py test
+          docker compose run --rm django sh -c "python manage.py wait_for_db && python manage.py test"
