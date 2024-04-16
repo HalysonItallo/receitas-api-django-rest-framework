@@ -47,6 +47,7 @@ THIRD_PARTY_APPS = [
 MY_APPS = [
     "core",
     "user",
+    "recipe",
 ]
 
 INSTALLED_APPS = THIRD_PARTY_APPS + MY_APPS
