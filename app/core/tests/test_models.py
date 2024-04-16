@@ -4,7 +4,7 @@ Tests for models.
 
 from decimal import Decimal
 
-from core.models import Recipe
+from core.models import Recipe, Tag
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
