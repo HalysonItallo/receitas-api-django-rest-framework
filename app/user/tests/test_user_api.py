@@ -12,10 +12,11 @@ CREATE_USER_URL = reverse("user:create")
 TOKEN_URL = reverse("user:token")
 ME_URL = reverse("user:me")
 
+User = get_user_model()
+
 
 def create_user(**params):
     """Create and return a new user."""
-    User = get_user_model()
     return User.objects.create_user(**params)
 
 
@@ -39,7 +40,6 @@ class PublicUserApiTests(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        User = get_user_model()
         user = User.objects.get(email=payload["email"])
         self.assertTrue(user.check_password(payload["password"]))
         self.assertNotIn("password", response.data)
@@ -71,7 +71,6 @@ class PublicUserApiTests(TestCase):
         response = self.client.post(CREATE_USER_URL, payload)
 
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        User = get_user_model()
 
         user_exists = User.objects.filter(email=payload["email"]).exists()
         self.assertFalse(user_exists)

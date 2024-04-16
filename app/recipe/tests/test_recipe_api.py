@@ -13,6 +13,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 RECIPES_URL = reverse("recipe:recipe-list")
+User = get_user_model()
 
 
 def detail_url(recipe_id):
@@ -36,6 +37,11 @@ def create_recipe(user, **params):
     return recipe
 
 
+def create_user(**params):
+    """Create and return a new user."""
+    return User.objects.create_user(**params)
+
+
 class PublicRecipeAPITests(TestCase):
     """Test unauthenticated API requests."""
 
@@ -53,11 +59,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def setUp(self) -> None:
         self.client = APIClient()
-        User = get_user_model()
-        self.user = User.objects.create_user(
-            "user@example.com",
-            "testpass123",
-        )
+        self.user = create_user(email="user@example.com", password="test123")
         self.client.force_authenticate(self.user)
 
     def test_retrive_recipes(self):
@@ -75,11 +77,7 @@ class PrivateRecipeAPITests(TestCase):
 
     def test_recipe_list_limited_to_user(self):
         """Test list of recipe is limited to authenticated user."""
-        User = get_user_model()
-        other_user = User.objects.create_user(
-            "other@example.com",
-            "testpass123",
-        )
+        other_user = create_user(email="other@example.com", password="test123")
 
         create_recipe(user=other_user)
         create_recipe(user=self.user)
@@ -122,3 +120,93 @@ class PrivateRecipeAPITests(TestCase):
             self.assertEqual(getattr(recipe, key), value)
 
         self.assertEqual(recipe.user, self.user)
+
+    def test_partial_update(self):
+        """Test partial update of a recipe."""
+        original_link = "https://example.com/recipe.pdf"
+
+        recipe = create_recipe(
+            user=self.user,
+            title="Sample recipe test",
+            link=original_link,
+        )
+
+        payload = {"title": "New Title"}
+        url = detail_url(recipe.id)
+        response = self.client.patch(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Esse método faz com que de fato o banco seja atualizado evitando o comportamento
+        # preguiçoso do django
+        recipe.refresh_from_db()
+
+        self.assertEqual(recipe.title, payload["title"])
+        self.assertEqual(recipe.link, original_link)
+        self.assertEqual(recipe.user, self.user)
+
+    def test_full_update(self):
+        """Test full update of a recipe."""
+        recipe = create_recipe(
+            user=self.user,
+            title="Sample recipe test",
+            link="https://example.com/recipe.pdf",
+            description="Sample recipe description",
+        )
+
+        payload = {
+            "title": "New recipe test",
+            "link": "https://example.com/new-recipe.pdf",
+            "description": "New recipe description",
+            "time_minutes": 5,
+            "price": Decimal("5.26"),
+        }
+
+        url = detail_url(recipe.id)
+        response = self.client.put(url, payload)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        recipe.refresh_from_db()
+
+        # Pega o valor do objeto e compara com o valor que tava no payload
+        for key, value in payload.items():
+            self.assertEqual(getattr(recipe, key), value)
+
+        self.assertEqual(recipe.user, self.user)
+
+    def test_update_user_returns_error(self):
+        """Test changing the recipe user results in an error."""
+
+        new_user = create_user(email="user2@example.com", password="test123")
+        recipe = create_recipe(self.user)
+
+        payload = {"user": new_user.id}
+        url = detail_url(recipe.id)
+        self.client.patch(url, payload)
+
+        recipe.refresh_from_db()
+
+        self.assertEqual(recipe.user, self.user)
+
+    def test_delete_recipe(self):
+        """Test deleting a recipe successful"""
+        recipe = create_recipe(user=self.user)
+        url = detail_url(recipe.id)
+
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertFalse(Recipe.objects.filter(id=recipe.id).exists())
+
+    def test_delete_recipe_other_users_recipe_error(self):
+        """Test trying to delete another users recipe given error."""
+
+        new_user = create_user(email="user2@example.com", password="test123")
+        recipe = create_recipe(user=new_user)
+
+        url = detail_url(recipe.id)
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+        self.assertTrue(Recipe.objects.filter(id=recipe.id).exists())
