@@ -9,7 +9,6 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from recipe.serializers import IngredientSerializer
-from recipe.tests.test_recipe_api import RECIPES_URL
 from rest_framework import status
 from rest_framework.test import APIClient
 
@@ -129,7 +128,7 @@ class PrivateIngredientApiTests(TestCase):
         )
         recipe.ingredients.add(i1)
 
-        response = self.client.get(RECIPES_URL, {"assigned_only": 1})
+        response = self.client.get(INGREDIENTS_URL, {"assigned_only": 1})
 
         s1 = IngredientSerializer(i1)
         s2 = IngredientSerializer(i2)
@@ -159,6 +158,6 @@ class PrivateIngredientApiTests(TestCase):
         r1.ingredients.add(i1)
         r2.ingredients.add(i1)
 
-        response = self.client.get(RECIPES_URL, {"assigned_only": 1})
+        response = self.client.get(INGREDIENTS_URL, {"assigned_only": 1})
 
         self.assertEqual(len(response.data), 1)
